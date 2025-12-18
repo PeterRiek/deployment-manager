@@ -1,0 +1,11 @@
+{
+	"repos": [
+		{
+			"name": "server-statuspage",
+			"branch": "main",
+			"docker_image": "server-statuspage",
+			"port": 80081,
+			"nginx_path": "/status/"
+		}
+	]
+}
