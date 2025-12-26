@@ -72,11 +72,10 @@ streamlit>=1.25
 
 ### 4. Firewall / Network
 
-* Ensure ports `9000` (Flask webhook) and `8501` (Streamlit dashboard) are open **only on private network or VPN**
+* Ensure port `8501` (Streamlit dashboard) is open **only on private network or VPN**
 * Optional UFW configuration:
 
 ```bash
-sudo ufw allow from 192.168.1.0/24 to any port 9000
 sudo ufw allow from 192.168.1.0/24 to any port 8501
 sudo ufw enable
 ```
