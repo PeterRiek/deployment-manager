@@ -127,7 +127,7 @@ cp .env.example .env
 2. Set the config file path in `.env`:
 
 ```
-CONFIG_FILE=/opt/deployment-manager/config.json
+CONFIG_FILE=/opt/apps/deployment-manager/config.json
 NGINX_CONFIG_FILE=/etc/nginx/sites-available/deploy.conf
 ```
 
@@ -208,9 +208,9 @@ Requires=docker.service
 [Service]
 Type=simple
 User=deploymgr
-WorkingDirectory=/opt/deployment-manager
-Environment="CONFIG_FILE=/opt/deployment-manager/config.json"
-ExecStart=/opt/deployment-manager/.venv/bin/python app.py
+WorkingDirectory=/opt/apps/deployment-manager
+Environment="CONFIG_FILE=/opt/apps/deployment-manager/config.json"
+ExecStart=/opt/apps/deployment-manager/.venv/bin/python app.py
 Restart=always
 RestartSec=3
 StandardOutput=journal
@@ -231,9 +231,9 @@ Requires=deployment-hook.service
 [Service]
 Type=simple
 User=deploymgr
-WorkingDirectory=/opt/deployment-manager
-Environment="CONFIG_FILE=/opt/deployment-manager/config.json"
-ExecStart=/opt/deployment-manager/.venv/bin/streamlit run dashboard.py \
+WorkingDirectory=/opt/apps/deployment-manager
+Environment="CONFIG_FILE=/opt/apps/deployment-manager/config.json"
+ExecStart=/opt/apps/deployment-manager/.venv/bin/streamlit run dashboard.py \
   --server.address=127.0.0.1 \
   --server.port=8501 \
   --server.headless=true \
