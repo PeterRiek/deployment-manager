@@ -1,17 +1,27 @@
-import os
 import json
+import os
+import threading
 
-CONFIG_FILE = os.getenv("CONFIG_FILE")
+CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
+_lock = threading.Lock()
 
-def load_config():
-    if not CONFIG_FILE or not os.path.exists(CONFIG_FILE):
-        raise FileNotFoundError("CONFIG_FILE environment variable missing or file does not exist")
-    with open(CONFIG_FILE) as f:
-        return json.load(f)
+def load_config() -> dict:
+    with _lock:
+        if not os.path.exists(CONFIG_FILE):
+            return {"deployments": []}
+        with open(CONFIG_FILE) as f:
+            return json.load(f)
+
+def save_config(config: dict):
+    with _lock:
+        tmp = CONFIG_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(config, f, indent=2)
+        os.replace(tmp, CONFIG_FILE)
 
 def get_deployment(repo: str, branch: str):
-    config = load_config()
-    for deployment in config.get("deployments", []):
-        if deployment["repo"] == repo and deployment["branch"] == branch:
-            return deployment
+    cfg = load_config()
+    for d in cfg.get("deployments", []):
+        if d["repo"] == repo and d["branch"] == branch:
+            return d
     return None
