@@ -32,6 +32,8 @@ def update_nginx_from_config(nginx_conf_path: str):
         # Streamlit dashboard
         nginx_lines.append("    # Streamlit dashboard")
         nginx_lines.append("    location /deploy/ {")
+        nginx_lines.append("        allow 192.168.1.0/24;") # Allow only local network
+        nginx_lines.append("        deny all;") # Deny everyone else
         nginx_lines.append("        proxy_pass http://127.0.0.1:8501/;")
         nginx_lines.append("        proxy_http_version 1.1;")
         nginx_lines.append("        proxy_set_header Upgrade $http_upgrade;")

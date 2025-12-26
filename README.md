@@ -1,6 +1,6 @@
 # Deployment Manager
 
-A **Flask-based GitHub webhook deployment manager** with Docker-based deployment automation and a **Streamlit dashboard** for managing deployment configuration. Supports multiple deployments, branch-based auto-deploy, Nginx reverse proxy configuration, and private network dashboard access.
+A **Flask-based GitHub webhook deployment manager** with **Docker-based deployment automation** and a **Streamlit dashboard** for managing deployment configuration. Supports multiple deployments, branch-based auto-deploy, Nginx reverse proxy configuration, and private network dashboard access.
 
 ---
 
@@ -26,7 +26,7 @@ A **Flask-based GitHub webhook deployment manager** with Docker-based deployment
 * Multi-deployment support with per-deployment configuration
 * Docker-based build, run, and management of applications
 * Automatic Nginx configuration for routing deployed apps
-* Streamlit dashboard to **view and edit deployment configuration**
+* Streamlit dashboard to **view and edit deployment configuration live**
 * Deployment state tracking with last-deploy timestamp and container status
 * Secure operation on private network or VPN
 
@@ -60,7 +60,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` should contain:
+`requirements.txt` includes:
 
 ```
 Flask>=2.3
@@ -72,8 +72,8 @@ streamlit>=1.25
 
 ### 4. Firewall / Network
 
-* Ensure ports 9000 (Flask hook) and 8501 (Streamlit) are open **only on private network** or VPN
-* Optionally, configure UFW:
+* Ensure ports `9000` (Flask webhook) and `8501` (Streamlit dashboard) are open **only on private network or VPN**
+* Optional UFW configuration:
 
 ```bash
 sudo ufw allow from 192.168.1.0/24 to any port 9000
@@ -101,30 +101,35 @@ sudo usermod -aG docker deploymgr
 deployment-manager/
 ├─ app.py                  # Flask webhook API
 ├─ dashboard.py            # Streamlit admin dashboard
-├─ config.py               # Config loader/editor
-├─ state.py                # Deployment runtime state
+├─ config.py               # Config loader/editor (JSON-based)
 ├─ repo.py                 # Git operations
 ├─ docker_ops.py           # Docker build/run/stop operations
 ├─ nginx.py                # Nginx configuration utilities
-├─ deployments.json        # Editable deployment configuration
+├─ config.json             # Deployment configuration storage
 ├─ requirements.txt        # Python dependencies
 ├─ .env                    # Environment variables
+├─ README.md               # Project documentation
+├─ .git/                   # Git repository
+└─ .venv/                  # Python virtual environment
 ```
+
+> `state.py` is no longer used; configuration and state are managed directly via `config.json`.
 
 ---
 
 ## Environment Setup
 
-1. Copy `.env.example` to `.env`:
+1. Copy `.env.example` to `.env` (or create `.env`):
 
 ```bash
 cp .env.example .env
 ```
 
-2. Set the config file path:
+2. Set the config file path in `.env`:
 
 ```
-CONFIG_FILE=/opt/deployment-manager/deployments.json
+CONFIG_FILE=/opt/deployment-manager/config.json
+NGINX_CONFIG_FILE=/etc/nginx/sites-available/deploy.conf
 ```
 
 3. Activate Python virtual environment:
@@ -137,7 +142,7 @@ pip install -r requirements.txt
 
 ---
 
-## Configuration (`deployments.json`)
+## Configuration (`config.json`)
 
 ```json
 {
@@ -156,14 +161,14 @@ pip install -r requirements.txt
 ```
 
 * `name`: Unique deployment identifier
-* `repo`: GitHub repository in `org/repo` format
+* `repo`: GitHub repository (`org/repo`)
 * `branch`: Branch to auto-deploy
 * `port`: Local port for Docker container
 * `route`: URL path for Nginx reverse proxy
-* `server`: Nginx server_name
+* `server`: Nginx `server_name`
 * `dockerfile_path`: Path to Dockerfile relative to repo root
 
-> Streamlit dashboard allows live editing of this file.
+> Streamlit dashboard allows live editing and saving of this file.
 
 ---
 
@@ -176,7 +181,7 @@ source .venv/bin/activate
 python app.py
 ```
 
-* Listens on port 9000 by default
+* Listens on port `9000`
 * Accepts GitHub webhook POSTs
 
 ### Streamlit Dashboard
@@ -193,9 +198,7 @@ streamlit run dashboard.py \
 
 ## Systemd Setup
 
-### Flask Webhook
-
-`/etc/systemd/system/deployment-hook.service`
+### Flask Webhook (`/etc/systemd/system/deployment-hook.service`)
 
 ```ini
 [Unit]
@@ -207,7 +210,7 @@ Requires=docker.service
 Type=simple
 User=deploymgr
 WorkingDirectory=/opt/deployment-manager
-Environment="CONFIG_FILE=/opt/deployment-manager/deployments.json"
+Environment="CONFIG_FILE=/opt/deployment-manager/config.json"
 ExecStart=/opt/deployment-manager/.venv/bin/python app.py
 Restart=always
 RestartSec=3
@@ -218,9 +221,7 @@ StandardError=journal
 WantedBy=multi-user.target
 ```
 
-### Streamlit Dashboard
-
-`/etc/systemd/system/deployment-dashboard.service`
+### Streamlit Dashboard (`/etc/systemd/system/deployment-dashboard.service`)
 
 ```ini
 [Unit]
@@ -232,7 +233,7 @@ Requires=deployment-hook.service
 Type=simple
 User=deploymgr
 WorkingDirectory=/opt/deployment-manager
-Environment="CONFIG_FILE=/opt/deployment-manager/deployments.json"
+Environment="CONFIG_FILE=/opt/deployment-manager/config.json"
 ExecStart=/opt/deployment-manager/.venv/bin/streamlit run dashboard.py \
   --server.address=127.0.0.1 \
   --server.port=8501 \
@@ -259,32 +260,32 @@ sudo systemctl start deployment-hook deployment-dashboard
 
 ## Security Considerations
 
-* **Dashboard should never be public**. Bind to `127.0.0.1` or a private network IP.
-* Use **VPN or private network** for access.
-* Use **firewall rules** or **Nginx access control**.
-* Run both services under a **dedicated non-root user** (`deploymgr`).
-* Keep Docker images from trusted sources.
-* Backup `deployments.json` regularly.
+* **Dashboard should never be public** — bind to `127.0.0.1` or a private IP
+* Use **VPN or private network** for access
+* Apply **firewall rules** or **Nginx access control**
+* Run services as a **dedicated non-root user** (`deploymgr`)
+* Only use Docker images from trusted sources
+* Backup `config.json` regularly
 
 ---
 
 ## Using the Dashboard
 
-* Access via `http://<private-ip>:8501/` (or reverse-proxied `/dashboard/`)
+* Access via `http://<private-ip>:8501/` (or reverse-proxied `/deploy/`)
 * View all deployments, status, and last deploy time
 * Add, edit, or delete deployments
-* Click "Save All Changes" to persist configuration
+* Click **Save All Changes** to persist configuration
 
-> Changes are immediately used by the webhook on next Git push.
+> Changes are immediately reflected in the webhook deployment process.
 
 ---
 
 ## Deployment Workflow
 
-1. Add a deployment via the dashboard or manually in `deployments.json`
+1. Add a deployment via the dashboard or manually in `config.json`
 2. Configure GitHub webhook pointing to `http://<server>:9000/hook`
-3. Push to configured branch → webhook triggers deployment
-4. Docker container built, old container stopped, Nginx updated automatically
+3. Push to the configured branch → webhook triggers deployment
+4. Docker container is built, old container stopped, Nginx updated automatically
 5. Dashboard reflects new deployment state
 
 ---
@@ -330,5 +331,5 @@ sudo systemctl reload nginx
 ## Notes
 
 * Always use HTTPS when exposing Nginx externally
-* Backup `deployments.json` before major changes
+* Backup `config.json` before major changes
 * Use consistent branch naming to avoid accidental production deployment
