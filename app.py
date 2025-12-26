@@ -35,7 +35,7 @@ def hook():
         return f"Deployment conflict for {repo_url}", 400
 
     pull_latest(directory, branch)
-    image_name = f"{repo.replace('/', '_')}:{branch}"
+    image_name = f"{repo.replace('/', '_')}:{branch}".lower()
 
     build_image(image_name, directory, dockerfile_path)
     stop_container(name)
