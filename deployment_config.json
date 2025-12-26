@@ -1,11 +1,13 @@
 {
-	"repos": [
+	"deployments": [
 		{
 			"name": "server-statuspage",
+			"repo": "PeterRiek/server-statuspage",
 			"branch": "main",
-			"docker_image": "server-statuspage",
-			"port": 80081,
-			"nginx_path": "/status/"
+			"port": 9001,
+			"route": "/status",
+			"server": "host.riek.me",
+			"docker": "Dockerfile"
 		}
 	]
 }
