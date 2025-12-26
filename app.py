@@ -4,10 +4,10 @@ import os
 
 load_dotenv()
 
-from config import get_deployment
+from config import NGINX_CONFIG_FILE, get_deployment
 from repo import check_repo, clone_repo, pull_latest
 from docker_ops import build_image, stop_container, run_container
-from nginx import update_nginx
+from nginx import update_nginx_from_config
 
 app = Flask(__name__)
 
@@ -25,8 +25,6 @@ def hook():
     directory = f"/opt/apps/{name}"
     repo_url = f"https://github.com/{repo}.git"
     port = deployment["port"]
-    route = deployment["route"]
-    server = deployment["server"]
     dockerfile_path = os.path.join(directory, deployment.get("dockerfile", "Dockerfile"))
 
     if not os.path.isdir(directory):
@@ -40,7 +38,7 @@ def hook():
     build_image(image_name, directory, dockerfile_path)
     stop_container(name)
     run_container(image_name, name, port)
-    update_nginx(server, name, port, route)
+    update_nginx_from_config(NGINX_CONFIG_FILE)
 
     return "Deployment successful", 200
 

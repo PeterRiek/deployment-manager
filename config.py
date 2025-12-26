@@ -3,6 +3,7 @@ import os
 import threading
 
 CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
+NGINX_CONFIG_FILE = os.getenv("NGINX_CONFIG_FILE", "/etc/nginx/sites-available/deploy.conf")
 _lock = threading.Lock()
 
 def load_config() -> dict:
