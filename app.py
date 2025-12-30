@@ -4,7 +4,7 @@ import os
 
 load_dotenv()
 
-from config import NGINX_CONFIG_FILE, get_deployment
+from config import NGINX_CONFIG_FILE, get_deployment, load_config
 from repo import check_repo, clone_repo, pull_latest
 from docker_ops import build_image, stop_container, run_container
 from nginx import update_nginx_from_config
@@ -42,5 +42,41 @@ def hook():
 
     return "Deployment successful", 200
 
+
+def start_all():
+    deployments = load_config()["deployments"]
+    for deployment in deployments:
+        name = deployment["name"]
+        directory = f"/opt/apps/{name}"
+        repo = deployment["repo"]
+        repo_url = f"https://github.com/{repo}.git"
+        port = deployment["port"]
+        branch = deployment["branch"]
+        dockerfile_path = os.path.join(directory, deployment.get("dockerfile", "Dockerfile"))
+
+        if not os.path.isdir(directory):
+            clone_repo(directory, repo_url, branch)
+        elif not check_repo(directory, repo_url):
+            continue
+
+        pull_latest(directory, branch)
+        image_name = f"{repo.replace('/', '_')}:{branch}".lower()
+
+        build_image(image_name, directory, dockerfile_path)
+        stop_container(name)
+        run_container(image_name, name, port)
+        update_nginx_from_config(NGINX_CONFIG_FILE)
+
+
 if __name__ == "__main__":
+    start_all()
     app.run(host="0.0.0.0", port=9000)
+
+
+
+
+
+
+
+
+
