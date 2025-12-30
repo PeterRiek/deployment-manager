@@ -72,11 +72,10 @@ streamlit>=1.25
 
 ### 4. Firewall / Network
 
-* Ensure ports `9000` (Flask webhook) and `8501` (Streamlit dashboard) are open **only on private network or VPN**
+* Ensure port `8501` (Streamlit dashboard) is open **only on private network or VPN**
 * Optional UFW configuration:
 
 ```bash
-sudo ufw allow from 192.168.1.0/24 to any port 9000
 sudo ufw allow from 192.168.1.0/24 to any port 8501
 sudo ufw enable
 ```
@@ -128,7 +127,7 @@ cp .env.example .env
 2. Set the config file path in `.env`:
 
 ```
-CONFIG_FILE=/opt/deployment-manager/config.json
+CONFIG_FILE=/opt/apps/deployment-manager/config.json
 NGINX_CONFIG_FILE=/etc/nginx/sites-available/deploy.conf
 ```
 
@@ -209,9 +208,9 @@ Requires=docker.service
 [Service]
 Type=simple
 User=deploymgr
-WorkingDirectory=/opt/deployment-manager
-Environment="CONFIG_FILE=/opt/deployment-manager/config.json"
-ExecStart=/opt/deployment-manager/.venv/bin/python app.py
+WorkingDirectory=/opt/apps/deployment-manager
+Environment="CONFIG_FILE=/opt/apps/deployment-manager/config.json"
+ExecStart=/opt/apps/deployment-manager/.venv/bin/python app.py
 Restart=always
 RestartSec=3
 StandardOutput=journal
@@ -232,9 +231,9 @@ Requires=deployment-hook.service
 [Service]
 Type=simple
 User=deploymgr
-WorkingDirectory=/opt/deployment-manager
-Environment="CONFIG_FILE=/opt/deployment-manager/config.json"
-ExecStart=/opt/deployment-manager/.venv/bin/streamlit run dashboard.py \
+WorkingDirectory=/opt/apps/deployment-manager
+Environment="CONFIG_FILE=/opt/apps/deployment-manager/config.json"
+ExecStart=/opt/apps/deployment-manager/.venv/bin/streamlit run dashboard.py \
   --server.address=127.0.0.1 \
   --server.port=8501 \
   --server.headless=true \
