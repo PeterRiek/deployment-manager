@@ -1,12 +1,26 @@
+from pathlib import Path
 import subprocess
 
 def build_image(image_name: str, context: str, dockerfile_path: str):
-    subprocess.run([
-        "docker", "build",
-        "-f", dockerfile_path,
-        "-t", image_name,
-        context
-    ], check=True)
+    dockerfile = Path(dockerfile_path)
+    ctx = Path(context)
+
+    if not dockerfile.is_file():
+        raise FileNotFoundError(f"Dockerfile not found: {dockerfile}")
+    if not ctx.is_dir():
+        raise FileNotFoundError(f"Build context not found: {ctx}")
+
+    subprocess.run(
+        [
+            "docker", "build",
+            "-f", str(dockerfile),
+            "-t", image_name,
+            str(ctx)
+        ],
+        check=True,
+        capture_output=True,
+        text=True
+    )
 
 def stop_container(container_name: str):
     subprocess.run(["docker", "stop", container_name], check=False)
