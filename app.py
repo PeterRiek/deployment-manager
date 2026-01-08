@@ -37,7 +37,7 @@ def hook():
 
     build_image(image_name, directory, dockerfile_path)
     stop_container(name)
-    run_container(image_name, name, port)
+    run_container(image_name, name, port, deployment.get("variables", {}))
     update_nginx_from_config(NGINX_CONFIG_FILE)
 
     return "Deployment successful", 200
@@ -52,6 +52,7 @@ def start_all():
         repo_url = f"https://github.com/{repo}.git"
         port = deployment["port"]
         branch = deployment["branch"]
+        variables = deployment.get("variables", {})
         dockerfile_path = os.path.join(directory, deployment.get("dockerfile", "Dockerfile"))
 
         if not os.path.isdir(directory):
@@ -64,7 +65,7 @@ def start_all():
 
         build_image(image_name, directory, dockerfile_path)
         stop_container(name)
-        run_container(image_name, name, port)
+        run_container(image_name, name, port, variables)
         update_nginx_from_config(NGINX_CONFIG_FILE)
 
 

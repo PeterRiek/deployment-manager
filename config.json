@@ -1,13 +1,15 @@
 {
-	"deployments": [
-		{
-			"name": "server-statuspage",
-			"repo": "PeterRiek/server-statuspage",
-			"branch": "main",
-			"port": 9001,
-			"route": "/status",
-			"server": "host.riek.me",
-			"docker": "Dockerfile"
-		}
-	]
+  "deployments": [
+    {
+      "name": "server-statuspage",
+      "repo": "PeterRiek/server-statuspage",
+      "branch": "main",
+      "port": 9001,
+      "route": "/status",
+      "server": "host.riek.me",
+      "docker": "Dockerfile",
+      "variables": {},
+      "dockerfile_path": "Dockerfile"
+    }
+  ]
 }
